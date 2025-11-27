@@ -4,6 +4,7 @@ import { typeDefs } from "./secure-vault/graphql/schema.js";
 import { resolvers } from "./secure-vault/graphql/resolves.js";
 import { ENV } from "./secure-vault/config/env.js";
 import { hmacMiddleware } from "./secure-vault/middleware/hmac.js";
+import rateRouter from "./secure-vault/src/routes/rateRouter.js";
 
 async function startServer() {
   console.log("🔧 startServer() called");
@@ -12,7 +13,13 @@ async function startServer() {
     const PORT = ENV.SERVER_PORT || 4000;
 
     // Body parsing middleware - idempotency'den önce
-    app.use(express.json());
+    app.use(
+      express.json({
+        verify: (req, res, buf) => {
+          req.rawBody = buf;
+        },
+      })
+    );
     app.use(express.urlencoded({ extended: true }));
 
     // Logging middleware
@@ -67,9 +74,7 @@ async function startServer() {
     });
 
     // Test endpoints
-    app.get("/", (req, res) => {
-      res.send("Hello world");
-    });
+    app.use("/api", rateRouter);
 
     app.get("/health", (req, res) => {
       res.json({

@@ -31,14 +31,15 @@ export const idempotencyMiddleware = async (req, res, next) => {
     //Ilk kez geliyor.
     const originalSend = res.send;
 
-    res.send = function (body) {
+    res.send = async function (body) {
       const responseBody = body;
 
-      redisClient.set(`idempotency:${idempotencyKey}`, responseBody, {
-        EX: 60 * 60 * 24, //24 Saat
-      });
-
-      console.log("Saved to idempotency cache");
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        await redisClient.set(`idempotency:${idempotencyKey}`, responseBody, {
+          EX: 60 * 60 * 24, //24 Saat
+        });
+        console.log("Saved to idempotency cache");
+      }
 
       return originalSend.call(this, body);
     };
