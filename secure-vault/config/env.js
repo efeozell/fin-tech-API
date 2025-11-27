@@ -9,4 +9,5 @@ export const ENV = {
   SERVER_PORT: process.env.SERVER_PORT,
   REDIS_URL: process.env.REDIS_URL,
   HMAC_SECRET: process.env.HMAC_SECRET,
+  EXCHANGE_API_KEY: process.env.EXCHANGE_API_KEY,
 };
