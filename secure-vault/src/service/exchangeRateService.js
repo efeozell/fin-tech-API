@@ -4,9 +4,22 @@ import { ENV } from "../../config/env.js";
 class ExchangeRateService {
   constructor() {
     this.apiKey = ENV.EXCHANGE_API_KEY || "";
+    if (!this.apiKey) {
+      throw new Error("EXCHANGE_API_KEY is required but not configured");
+    }
     this.baseUrl = "https://v6.exchangerate-api.com/v6/";
     this.cache = new Map();
     this.cacheTTL = 5 * 60 * 1000; // 5 dakika
+    setInterval(() => this.cleanupCache(), 10 * 60 * 1000);
+  }
+
+  cleanupCache() {
+    const now = Date.now();
+    for (const [key, value] of this.cache.entries()) {
+      if (value.expiresAt <= now) {
+        this.cache.delete(key);
+      }
+    }
   }
 
   getCacheKey(base, target) {
@@ -25,7 +38,9 @@ class ExchangeRateService {
     console.log(`Cache miss for ${cacheKey}, fetching from API... `);
 
     try {
-      const response = await axios.get(`${this.baseUrl}${this.apiKey}/pair/${base}/${target}`);
+      const response = await axios.get(`${this.baseUrl}${this.apiKey}/pair/${base}/${target}`, {
+        timeout: 10000,
+      });
       if (response.data.result !== "success") {
         throw new Error(response.data["error-type"] || "API error");
       }
@@ -34,7 +49,7 @@ class ExchangeRateService {
         base,
         target,
         rate: response.data.conversion_rate,
-        timestamp: new Date().toString(),
+        timestamp: new Date().toISOString(),
       };
 
       this.cache.set(cacheKey, {

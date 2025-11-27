@@ -5,7 +5,7 @@ export const hmacMiddleware = (req, res, next) => {
   const clientSignature = req.headers["x-signature"];
 
   if (!req.rawBody) {
-    return next();
+    return res.status(400).json({ error: "Request body required for signature verification." });
   }
 
   if (!clientSignature) {

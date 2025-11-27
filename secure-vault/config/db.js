@@ -18,10 +18,19 @@ async function withTransaction(callback) {
     await client.query("COMMIT");
     return result;
   } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("Error during rollback:", rollbackError);
+    }
     await client.query("ROLLBACK");
     throw error;
   } finally {
-    client.release();
+    try {
+      client.release();
+    } catch (releaseError) {
+      console.error("Error releasing client:", releaseError);
+    }
   }
 }
 

@@ -14,7 +14,7 @@ router.get("/rate", async (req, res) => {
   const targetStr = String(target).toUpperCase();
 
   if (baseStr === targetStr) {
-    return res.status(400).json({
+    return res.status(200).json({
       success: true,
       data: {
         base: baseStr,
@@ -42,7 +42,7 @@ router.get("/rate", async (req, res) => {
       });
     }
 
-    return res.status(500).jsom({
+    return res.status(500).json({
       success: false,
       error: "Failed to fetch exchange rate data.",
       message: errorMessage,
